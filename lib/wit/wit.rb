@@ -1,25 +1,32 @@
 require 'faraday'
-require 'json'
-require 'ostruct'
+require 'faraday_middleware'
 
 module Wit
+  DEFAULT_VERSION = '20141022'
 
   class << self
-    attr_accessor :token
+    attr_accessor :token, :version
 
     def token
       @token || ENV['WIT_TOKEN']
+    end
+
+    def version
+      @version || ENV['WIT_VERSION'] || DEFAULT_VERSION
     end
   end
 
   def self.message(message = '')
     response = connection.get do |req|
       req.headers['Authorization'] = "Bearer #{token}"
+      req.headers['Accept'] = "application/vnd.wit.#{version}+json"
       req.url '/message', q: message
     end
 
+    puts "**** STATUS: #{response.body}"
+
     case response.status
-    when 200 then return Result.new JSON.parse(response.body)
+    when 200 then return response.body
     when 401 then raise Unauthorized, "incorrect token set for Wit.token set an env for WIT_TOKEN or set Wit::TOKEN manually"
     else raise BadResponse, "response code: #{response.status}"
     end
@@ -27,37 +34,10 @@ module Wit
 
   def self.connection
     @connection ||= Faraday.new url: 'https://api.wit.ai' do |faraday|
-      faraday.adapter Faraday.default_adapter
+      faraday.use      Faraday::Response::Mashify
+      faraday.response :json, content_type: /\bjson$/
+      faraday.adapter  Faraday.default_adapter
     end
-  end
-
-  class Result
-
-    attr_reader :raw, :msg_id, :msg_body, :intent, :confidence, :entities
-
-    def initialize(hash)
-      @raw = hash
-      @msg_id = hash['msg_id']
-      @msg_body = hash['msg_body']
-      @intent = hash['outcome']['intent']
-      @confidence = hash['outcome']['confidence']
-      @entities = EntityCollection.new
-      hash['outcome']['entities'].each do |name, entity|
-        @entities.send(:"#{name}=", Entity.new(entity))
-      end
-    end
-
-  end
-
-  class EntityCollection < OpenStruct
-
-    def [](name)
-      send(name.to_sym)
-    end
-
-  end
-
-  class Entity < OpenStruct
   end
 
   class Unauthorized < Exception; end

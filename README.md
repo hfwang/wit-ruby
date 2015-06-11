@@ -14,10 +14,12 @@ You will need to create a Wit.ai account and begin training it.
 ## Installation
 
 ```ruby
-gem 'wit-ruby', '>= 0.0.2'
+gem 'wit-ruby', '>= 0.0.3'
 ```
 
 You'll need to set an environment variable named `WIT_TOKEN` or specify your token with `Wit.token = [your token]`.
+
+You can also optionall specify a version by setting the `WIT_VERSION` environment variable or by using `Wit.version = [your version]`.
 
 ```shell
 export WIT_TOKEN=[your token]
@@ -28,62 +30,16 @@ export WIT_TOKEN=[your token]
 
 ```ruby
 result = Wit.message('Hi')
-result.intent # will be Hello with the default Wit instance.
-result.confidence # will be relatively low initially.
-result.entities # will be {}, but if there are entities the can accessed as [:name] or .name
+result.outcomes # an array of possible outcomes. if Wit.AI is unable to determine an intent this will be an empty `[]`.
+outcome = result.outcomes[0] # Grab the first outcome... may not be the most likely?
+outcome.intent # will be Hello with the default Wit instance.
+outcome.confidence # will be relatively low initially.
+outcome.entities # will be {}, but if there are entities this would be an array of them.
 ```
 
 ### Result properties/methods
 
-<dl>
-
-<dt> raw </dt><dd>
-Raw response hash (parsed JSON)
-</dd>
-
-<dt> msgId </dt><dd>
-The unique message id provided back from Wit.
-</dd>
-
-<dt> msgBody </dt><dd>
-The original message sent.
-</dd>
-
-<dt> intent </dt><dd>
-The intent, as determined by Wit.
-</dd>
-
-<dt> confidence </dt><dd>
-The confidence level that Wit determined.
-</dd>
-
-<dt> entities </dt><dd>
-Hash of entities, which contain the value, and the start/end position within msgBody.
-</dd>
-
-</dl>
-
-### Entity properties/methods
-
-<dl>
-
-<dt> value </dt><dd>
-The value as determined by Wit (might not be the same as body).
-</dd>
-
-<dt> start </dt><dd>
-The start position index from msgBody.
-</dd>
-
-<dt> end </dt><dd>
-The end position index from msgBody.
-</dd>
-
-<dt> body </dt><dd>
-The actual value as specified in msgBody.
-</dd>
-
-</dl>
+We use hashie to provide easy access to the JSON response from Wit.AI. Please see the [Wit.AI documention](https://wit.ai/docs/http/20141022#get-intent-via-text-link) for details on the result structure.
 
 
 ## License

@@ -1,10 +1,9 @@
-#!/usr/bin/env rake
-require "fileutils"
+require "bundler/gem_tasks"
 
-begin
-  require "bundler/setup"
-rescue LoadError
-  puts "You must `gem install bundler` and `bundle install` to run rake tasks"
+task :console do
+  require 'irb'
+  require 'irb/completion'
+  require 'wit/wit' # You know what to do.
+  ARGV.clear
+  IRB.start
 end
-
-Bundler::GemHelper.install_tasks
