@@ -23,8 +23,6 @@ module Wit
       req.url '/message', q: message
     end
 
-    puts "**** STATUS: #{response.body}"
-
     case response.status
     when 200 then return response.body
     when 401 then raise Unauthorized, "incorrect token set for Wit.token set an env for WIT_TOKEN or set Wit::TOKEN manually"
