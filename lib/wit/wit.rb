@@ -18,11 +18,38 @@ module Wit
 
   def self.message(message = '')
     response = connection.get do |req|
-      req.headers['Authorization'] = "Bearer #{token}"
-      req.headers['Accept'] = "application/vnd.wit.#{version}+json"
       req.url '/message', q: message
     end
 
+    return self.handle_response(response)
+  end
+
+  def self.list_intents
+    response = connection.get do |req|
+      req.url "/intents"
+    end
+
+    return self.handle_response(response)
+  end
+
+  def self.get_intent(intent_id_or_name)
+    response = connection.get do |req|
+      req.url "/intents/#{intent_id_or_name}"
+    end
+
+    return self.handle_response(response)
+  end
+
+  def self.add_expression(intent_id_or_name, expression)
+    response = connection.post do |req|
+      req.url "/intents/#{intent_id_or_name}/expressions"
+      req.body = [{ body: expression }].to_json
+    end
+
+    return self.handle_response(response)
+  end
+
+  def self.handle_response(response)
     case response.status
     when 200 then return response.body
     when 401 then raise Unauthorized, "incorrect token set for Wit.token set an env for WIT_TOKEN or set Wit::TOKEN manually"
@@ -31,7 +58,12 @@ module Wit
   end
 
   def self.connection
-    @connection ||= Faraday.new url: 'https://api.wit.ai' do |faraday|
+    @connection ||= Faraday.new('https://api.wit.ai',
+                                headers: {
+                                  'Authorization' => "Bearer #{self.token}",
+                                  'Content-Type' => "application/json",
+                                  'Accept' => "application/vnd.wit.#{self.version}+json"
+                                }) do |faraday|
       faraday.use      Faraday::Response::Mashify
       faraday.response :json, content_type: /\bjson$/
       faraday.adapter  Faraday.default_adapter
