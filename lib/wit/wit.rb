@@ -16,9 +16,17 @@ module Wit
     end
   end
 
-  def self.message(message = '')
+  def self.message(message='', opts=nil)
     response = connection.get do |req|
-      req.url '/message', q: message
+      opts ||= {}
+
+      params = { :q => message }
+      params[:msg_id] = opts[:message_id] if opts.has_key?(:message_id)
+      params[:thread_id] = opts[:thread_id] if opts.has_key?(:thread_id)
+      params[:n] = opts[:num_results] if opts.has_key?(:num_results)
+      params[:context] = JSON.generate(opts[:context]) if opts.has_key?(:context)
+
+      req.url('/message', params)
     end
 
     return self.handle_response(response)
