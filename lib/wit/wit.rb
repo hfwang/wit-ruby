@@ -57,6 +57,22 @@ module Wit
     return self.handle_response(response)
   end
 
+  def self.list_entities
+    response = connection.get do |req|
+      req.url "/entities"
+    end
+
+    return self.handle_response(response)
+  end
+
+  def self.get_entity(entity_id_or_name)
+    response = connection.get do |req|
+      req.url "/entities/#{entity_id_or_name}"
+    end
+
+    return self.handle_response(response)
+  end
+
   def self.handle_response(response)
     case response.status
     when 200 then return response.body
